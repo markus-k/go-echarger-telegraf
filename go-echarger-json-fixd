@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+import json
+import paho.mqtt.client as mqtt
+
+
+MQTT_SERVER = "your-mqtt-ip"
+MQTT_PORT = 1883
+MQTT_KEEPALIVE = 60
+
+INT_FIELDS = (u'lse', u'cdi', u'r1x', u'alw', u'wen', u'adi', u'ama', u'amp', u'al4', u'al5', u'al2', u'al3', u'lch', u'al1', u'azo', u'wst', u'rbt', u'cfi', u'ec7', u'ec6', u'ec5', u'ec4', u'ec1', u'ec9', u'ec8', u'tmp', u'ecd', u'eca', u'ast', u'ecr', u'tds', u'nmo', u'eto', u'txi', u'aho', u'loa', u'loe', u'lon', u'lom', u'lop', u'ust', u'lot', u'tof', u'sdp', u'dto', u'err', u'cid', u'stp', u'rbc', u'lbr', u'cbl', u'dws', u'afi', u'lof', u'dwo', u'pha', u'uby', u'cch')
+
+
+def on_connect(client, userdata, flags, rc):
+    client.subscribe("go-eCharger/+/status")
+
+def on_message(client, userdata, msg):
+    try:
+        obj_s = msg.payload.decode('utf-8')
+        obj = json.loads(obj_s)
+        new_obj = dict()
+        for key, value in obj.items():
+            if key in INT_FIELDS:
+                new_obj[key] = int(value)
+            else:
+                new_obj[key] = value
+
+        new_obj_s = json.dumps(new_obj)
+
+        client.publish("go-eCharger/{sse}/status-fixed".format(sse=obj["sse"]), new_obj_s.encode('utf-8'))
+    except Exception as e:
+        print("Parsing message failed: " + str(e))
+        pass
+
+
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
+
+client.connect(MQTT_SERVER, MQTT_PORT, MQTT_KEEPALIVE)
+
+client.loop_forever()

@@ -1,0 +1,13 @@
+[Unit]
+Description=go-eCharger MQTT JSON fixer
+Requires=network.target
+After=network.target
+
+[Service]
+Type=simple
+RemainAfterExit=no
+ExecStart=/usr/local/bin/go-echarger-json-fixd
+ExecStop=/usr/local/bin/go-echarger-json-fixd
+
+[Install]
+WantedBy=multi-user.target
